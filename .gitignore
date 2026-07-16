@@ -1,0 +1,62 @@
+# ZeroDefect — .gitignore
+
+# ── Python ─────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+zerodefect_env/
+env/
+
+# ── Jupyter ────────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Data (large files — commit empty folder placeholders only) ─────────────────
+data/good/*.jpg
+data/good/*.jpeg
+data/good/*.png
+data/defects/**/*.jpg
+data/defects/**/*.jpeg
+data/defects/**/*.png
+data/test/**/*.jpg
+data/test/**/*.jpeg
+data/test/**/*.png
+
+# ── Models (can be large) ──────────────────────────────────────────────────────
+models/*.pkl
+models/*.pth
+models/*.onnx
+models/*.tflite
+models/*.bin
+# Keep .gitkeep files so folders are tracked
+!models/.gitkeep
+
+# ── Logs ───────────────────────────────────────────────────────────────────────
+logs/*.csv
+logs/thumbnails/
+logs/*.db
+!logs/.gitkeep
+
+# ── IDE / OS ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── ESP32 build artifacts ──────────────────────────────────────────────────────
+esp32/build/
+esp32/.pio/
+
+# ── Roboflow/Dataset Folders ───────────────────────────────────────────────────
+Aircraft-AI-Dataset-4/
+Aircraft-Defect-Detection-3/
+aircraft-skin-defects-classification-new-dataset-2/

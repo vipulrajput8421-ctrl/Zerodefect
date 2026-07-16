@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZeroDefect — Live Inspection Dashboard</title>
+  <meta name="description" content="Real-time aerospace aircraft skin anomaly detection dashboard. Few-shot defect detection for InnoVent 2026." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo-block">
+        <div class="logo-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="17" stroke="url(#g1)" stroke-width="2"/>
+            <path d="M11 18 L16 23 L25 13" stroke="#00f5a0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#00f5a0"/>
+                <stop offset="1" stop-color="#00d9f5"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div>
+          <h1 class="logo-text">ZeroDefect</h1>
+          <p class="logo-sub">Live Inspection Dashboard</p>
+        </div>
+      </div>
+
+      <div class="header-meta">
+        <div class="badge badge-track">Track 3.2.3.4</div>
+        <div class="badge badge-innov">InnoVent 2026</div>
+        <div class="system-status" id="system-status">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">Connecting…</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main content ── -->
+  <main class="main-grid">
+
+    <!-- ── Live Decision Card ── -->
+    <section class="card decision-card" id="decision-card">
+      <div class="decision-icon" id="decision-icon">
+        <svg id="icon-ok" width="64" height="64" viewBox="0 0 64 64" fill="none" style="display:none">
+          <circle cx="32" cy="32" r="30" fill="rgba(0,245,160,0.15)" stroke="#00f5a0" stroke-width="2"/>
+          <path d="M20 32 L28 40 L44 24" stroke="#00f5a0" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <svg id="icon-defect" width="64" height="64" viewBox="0 0 64 64" fill="none" style="display:none">
+          <circle cx="32" cy="32" r="30" fill="rgba(255,60,60,0.15)" stroke="#ff3c3c" stroke-width="2"/>
+          <path d="M22 22 L42 42 M42 22 L22 42" stroke="#ff3c3c" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+        <div class="icon-idle" id="icon-idle">
+          <div class="pulse-ring"></div>
+          <div class="pulse-core"></div>
+        </div>
+      </div>
+
+      <div class="decision-label" id="decision-label">Waiting for inspection…</div>
+      <div class="decision-type" id="decision-type"></div>
+
+      <div class="score-row">
+        <div class="score-item">
+          <span class="score-label">Anomaly Score</span>
+          <span class="score-value mono" id="score-value">—</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">Threshold</span>
+          <span class="score-value mono" id="threshold-value">—</span>
+        </div>
+      </div>
+
+      <div class="conf-section">
+        <div class="conf-header">
+          <span class="score-label">Confidence</span>
+          <span class="mono" id="conf-pct">—</span>
+        </div>
+        <div class="conf-bar-bg">
+          <div class="conf-bar-fill" id="conf-bar" style="width:0%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Stats Panel ── -->
+    <section class="card stats-card">
+      <h2 class="card-title">Session Statistics</h2>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-number" id="stat-total">0</div>
+          <div class="stat-label">Total Inspections</div>
+        </div>
+        <div class="stat-box stat-ok">
+          <div class="stat-number" id="stat-ok">0</div>
+          <div class="stat-label">OK</div>
+        </div>
+        <div class="stat-box stat-defect">
+          <div class="stat-number" id="stat-defect">0</div>
+          <div class="stat-label">DEFECT</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="stat-uptime">0s</div>
+          <div class="stat-label">Uptime</div>
+        </div>
+      </div>
+
+      <!-- Defect breakdown -->
+      <div class="breakdown-section">
+        <h3 class="breakdown-title">Defect Breakdown</h3>
+        <div id="breakdown-list" class="breakdown-list">
+          <div class="breakdown-empty">No defects logged yet.</div>
+        </div>
+      </div>
+
+      <!-- Model info -->
+      <div class="model-info-section" id="model-info-section">
+        <h3 class="breakdown-title">Model Status</h3>
+        <div class="model-info-grid" id="model-info-grid">
+          <span class="model-key">Status</span>
+          <span class="model-val" id="mi-status">Loading…</span>
+          <span class="model-key">Classifier</span>
+          <span class="model-val" id="mi-classifier">—</span>
+          <span class="model-key">Threshold</span>
+          <span class="model-val mono" id="mi-threshold">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Upload / Test Panel ── -->
+    <section class="card upload-card">
+      <h2 class="card-title">Test Image Upload</h2>
+      <p class="card-sub">Upload an image to test the model without the webcam.</p>
+
+      <div class="upload-zone" id="upload-zone">
+        <div class="upload-icon">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <path d="M20 28 L20 12 M13 19 L20 12 L27 19" stroke="#8892a4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="6" y="28" width="28" height="6" rx="2" fill="rgba(136,146,164,0.15)" stroke="#8892a4" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <p class="upload-hint">Click to browse or drag &amp; drop</p>
+        <p class="upload-formats">JPG, PNG, JPEG</p>
+        <input type="file" id="upload-input" accept="image/*" style="display:none" />
+      </div>
+
+      <div id="upload-preview" style="display:none">
+        <img id="preview-img" alt="Preview" class="preview-image" />
+        <div id="upload-result" class="upload-result"></div>
+      </div>
+
+      <button class="btn-upload" id="btn-run-inference" style="display:none">
+        Run Inference
+      </button>
+    </section>
+
+    <!-- ── Audit Log ── -->
+    <section class="card log-card">
+      <div class="log-header">
+        <h2 class="card-title">Inspection Audit Log</h2>
+        <div class="log-actions">
+          <button class="btn-secondary" id="btn-refresh-log">↻ Refresh</button>
+          <a class="btn-secondary" href="/api/export" download>⬇ Export CSV</a>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="log-table" id="log-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Timestamp</th>
+              <th>Decision</th>
+              <th>Defect Type</th>
+              <th>Confidence</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody">
+            <tr><td colspan="6" class="empty-row">No inspections logged yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination" id="log-pagination"></div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>ZeroDefect v1.0 &nbsp;|&nbsp; InnoVent 2026-27 &nbsp;|&nbsp;
+       <span class="mono" id="footer-refresh">Auto-refreshing every 3s</span>
+    </p>
+    <p class="footer-note">
+      Anomaly-first + few-shot detection. EU AI Act traceability compliant design.
+    </p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

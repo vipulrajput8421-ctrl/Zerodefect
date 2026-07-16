@@ -1,0 +1,17 @@
+{
+  "threshold": 1.4836462607979775,
+  "image_size": 256,
+  "n_images": 120,
+  "coreset_ratio": 0.01,
+  "n_patches_raw": 122880,
+  "n_patches_coreset": 1228,
+  "training_time_s": 38.281163454055786,
+  "classifier_ready": true,
+  "defect_types": [
+    "crack",
+    "dent",
+    "missing-rivet",
+    "paint-peel",
+    "scratch"
+  ]
+}
