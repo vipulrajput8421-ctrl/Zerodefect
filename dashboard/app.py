@@ -106,8 +106,20 @@ def _score_pil_image(img: Image.Image) -> dict:
     image_size = _model_info.get("image_size", DEFAULT_IMAGE_SIZE) if _model_info else DEFAULT_IMAGE_SIZE
     threshold = _model_info.get("threshold", 1.0) if _model_info else 1.0
 
+    # Aerospace Domain Specifics: Isolate defects specifically on structural aircraft components
+    import cv2
+    img_np = np.array(img.convert("RGB"))
+    hsv = cv2.cvtColor(img_np, cv2.COLOR_RGB2HSV)
+    h, s, v = cv2.split(hsv)
+    # Mask of the aircraft panel surface (low saturation gray/silver/white, reasonable brightness)
+    panel_mask = (s < 50) & (v > 40) & (v < 252)
+    # Isolate component: fill background clutter with canonical normal metal gray (180, 183, 188)
+    isolated_np = img_np.copy()
+    isolated_np[~panel_mask] = [180, 183, 188]
+    img_processed = Image.fromarray(isolated_np)
+
     transform = get_transform(image_size)
-    tensor = transform(img.convert("RGB")).unsqueeze(0)
+    tensor = transform(img_processed.convert("RGB")).unsqueeze(0)
 
     patches = _extractor.extract_flat_patches(tensor)      # [N, 384]
     dists, _ = _nn_model.kneighbors(patches)               # [N, 1]

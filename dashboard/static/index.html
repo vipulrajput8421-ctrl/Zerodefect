@@ -7,7 +7,7 @@
   <meta name="description" content="Real-time aerospace aircraft skin anomaly detection dashboard. Few-shot defect detection for InnoVent 2026." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=1.4" />
 </head>
 <body>
 
@@ -135,29 +135,58 @@
 
     <!-- ── Upload / Test Panel ── -->
     <section class="card upload-card">
-      <h2 class="card-title">Test Image Upload</h2>
-      <p class="card-sub">Upload an image to test the model without the webcam.</p>
+      <h2 class="card-title">Test Image Upload &amp; Live Scan</h2>
+      <p class="card-sub">Upload an image or use your webcam to scan for defects in real-time.</p>
 
-      <div class="upload-zone" id="upload-zone">
-        <div class="upload-icon">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <path d="M20 28 L20 12 M13 19 L20 12 L27 19" stroke="#8892a4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="6" y="28" width="28" height="6" rx="2" fill="rgba(136,146,164,0.15)" stroke="#8892a4" stroke-width="1.5"/>
-          </svg>
+      <!-- Toggle mode -->
+      <div class="mode-toggle">
+        <button class="toggle-btn active" id="toggle-upload">📂 File Upload</button>
+        <button class="toggle-btn" id="toggle-webcam">📷 Live Scan</button>
+      </div>
+
+      <!-- File upload container -->
+      <div id="file-upload-container">
+        <div class="upload-zone" id="upload-zone">
+          <div class="upload-icon">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <path d="M20 28 L20 12 M13 19 L20 12 L27 19" stroke="#8892a4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="6" y="28" width="28" height="6" rx="2" fill="rgba(136,146,164,0.15)" stroke="#8892a4" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <p class="upload-hint">Click to browse or drag &amp; drop</p>
+          <p class="upload-formats">JPG, PNG, JPEG</p>
+          <input type="file" id="upload-input" accept="image/*" style="display:none" />
         </div>
-        <p class="upload-hint">Click to browse or drag &amp; drop</p>
-        <p class="upload-formats">JPG, PNG, JPEG</p>
-        <input type="file" id="upload-input" accept="image/*" style="display:none" />
+
+        <div id="upload-preview" style="display:none">
+          <img id="preview-img" alt="Preview" class="preview-image" />
+        </div>
+
+        <button class="btn-upload" id="btn-run-inference" style="display:none">
+          Run Inference
+        </button>
       </div>
 
-      <div id="upload-preview" style="display:none">
-        <img id="preview-img" alt="Preview" class="preview-image" />
-        <div id="upload-result" class="upload-result"></div>
+      <!-- Webcam Container -->
+      <div id="webcam-container" style="display:none">
+        <div class="video-wrap">
+          <video id="webcam-video" autoplay playsinline muted></video>
+          <div class="webcam-overlay-grid"></div>
+          <!-- Live Scan Status Overlay -->
+          <div class="scan-status-overlay">
+            <span class="scan-pulse-dot"></span>
+            <span class="scan-status-text">SYSTEM SCANNING</span>
+          </div>
+        </div>
+        <div class="webcam-controls">
+          <button class="btn-upload" id="btn-webcam-stop" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text-secondary); width: 100%; margin-top: 16px;">
+            🛑 Stop Scanning &amp; Close Camera
+          </button>
+        </div>
       </div>
 
-      <button class="btn-upload" id="btn-run-inference" style="display:none">
-        Run Inference
-      </button>
+      <!-- Result section (shared by both) -->
+      <div id="upload-result" class="upload-result" style="display:none"></div>
     </section>
 
     <!-- ── Audit Log ── -->
@@ -202,6 +231,6 @@
     </p>
   </footer>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=1.4"></script>
 </body>
 </html>

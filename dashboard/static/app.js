@@ -122,7 +122,7 @@ function renderLog(data) {
   const { rows, total, page, pages } = data;
 
   if (!rows || rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-row">No inspections logged yet. Run live_demo.py to start.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-row">No inspections logged yet. Start a Live Scan or upload a file to begin.</td></tr>';
     $('log-pagination').innerHTML = '';
     return;
   }
@@ -160,7 +160,7 @@ function renderLog(data) {
   paginEl.innerHTML = btns;
 }
 
-// ── Upload / Inference ────────────────────────────────────────────────────────
+// ── Upload & Webcam Inference ──────────────────────────────────────────────────
 
 const uploadZone  = $('upload-zone');
 const uploadInput = $('upload-input');
@@ -194,21 +194,22 @@ function handleFileSelected(file) {
     $('preview-img').src = e.target.result;
     $('upload-preview').style.display = 'block';
     $('upload-result').innerHTML = '';
+    $('upload-result').style.display = 'none';
     $('upload-result').className = 'upload-result';
     $('btn-run-inference').style.display = 'block';
   };
   reader.readAsDataURL(file);
 }
 
-$('btn-run-inference').addEventListener('click', async () => {
-  if (!uploadedFile) return;
-
-  const btn = $('btn-run-inference');
-  btn.textContent = 'Running…';
-  btn.disabled = true;
-
+// Unified Inference Engine
+async function runInference(fileOrBlob, isWebcam = false) {
   const formData = new FormData();
-  formData.append('file', uploadedFile);
+  formData.append('file', fileOrBlob, isWebcam ? 'webcam_scan.jpg' : fileOrBlob.name);
+
+  const videoWrap = document.querySelector('.video-wrap');
+  if (isWebcam && videoWrap) {
+    videoWrap.classList.add('scanning-active');
+  }
 
   try {
     const res = await fetch(`${API_BASE}/api/infer`, { method: 'POST', body: formData });
@@ -218,12 +219,34 @@ $('btn-run-inference').addEventListener('click', async () => {
     }
     const result = await res.json();
     displayUploadResult(result);
-
-    // Also update the main decision card to reflect latest inference
     updateDecisionCard(result);
+
+    // Dynamic session updates
+    await loadLog(1);
+    await pollStatus();
+    
+    return result;
   } catch (err) {
     $('upload-result').className = 'upload-result defect';
+    $('upload-result').style.display = 'block';
     $('upload-result').innerHTML = `<strong>Error:</strong> ${err.message}`;
+    console.error("Inference Error:", err);
+  } finally {
+    if (isWebcam && videoWrap) {
+      videoWrap.classList.remove('scanning-active');
+    }
+  }
+}
+
+$('btn-run-inference').addEventListener('click', async () => {
+  if (!uploadedFile) return;
+
+  const btn = $('btn-run-inference');
+  btn.textContent = 'Running…';
+  btn.disabled = true;
+
+  try {
+    await runInference(uploadedFile, false);
   } finally {
     btn.textContent = 'Run Inference';
     btn.disabled = false;
@@ -234,6 +257,7 @@ function displayUploadResult(result) {
   const el = $('upload-result');
   const isDefect = result.decision === 'DEFECT';
   el.className = `upload-result ${isDefect ? 'defect' : 'ok'}`;
+  el.style.display = 'block';
   const typeStr = isDefect ? ` — <strong>${result.defect_type || 'unknown'}</strong>` : '';
   el.innerHTML = `
     <strong>${isDefect ? '✗ DEFECT' : '✓ OK'}${typeStr}</strong><br/>
@@ -269,6 +293,166 @@ function updateDecisionCard(result) {
   $('conf-bar').style.width = `${confPct}%`;
   $('conf-pct').textContent = `${confPct}%`;
 }
+
+// ── Webcam Controller ──────────────────────────────────────────────────────────
+
+let webcamStream = null;
+let scanLoopActive = false;
+let autoScanTimeout = null;
+
+async function startWebcam() {
+  if (webcamStream) return;
+  
+  $('upload-result').style.display = 'none';
+  $('upload-result').innerHTML = '';
+  
+  try {
+    // First try with facingMode: user
+    webcamStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user" }
+    });
+  } catch (err) {
+    console.warn("getUserMedia with facingMode:user failed, trying generic video constraint...", err);
+    try {
+      // Generic fallback (matches any camera or virtual camera device)
+      webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    } catch (fallbackErr) {
+      console.error("Webcam access error:", fallbackErr);
+      alert("Could not access camera. Please check permissions and device availability.");
+      $('toggle-upload').click();
+      return;
+    }
+  }
+  
+  const video = $('webcam-video');
+  video.srcObject = webcamStream;
+  video.play();
+  
+  const videoWrap = document.querySelector('.video-wrap');
+  if (videoWrap) {
+    videoWrap.classList.add('scanning-active');
+  }
+  
+  document.querySelector('.scan-status-text').textContent = 'SYSTEM SCANNING';
+  $('webcam-container').style.display = 'block';
+  $('file-upload-container').style.display = 'none';
+  
+  scanLoopActive = true;
+  runAutoScanLoop();
+}
+
+function stopWebcam() {
+  scanLoopActive = false;
+  if (autoScanTimeout) {
+    clearTimeout(autoScanTimeout);
+    autoScanTimeout = null;
+  }
+  if (webcamStream) {
+    webcamStream.getTracks().forEach(track => track.stop());
+    webcamStream = null;
+  }
+  const video = $('webcam-video');
+  video.srcObject = null;
+  
+  const videoWrap = document.querySelector('.video-wrap');
+  if (videoWrap) {
+    videoWrap.classList.remove('scanning-active', 'defect-frozen');
+  }
+  
+  $('webcam-container').style.display = 'none';
+  $('file-upload-container').style.display = 'block';
+}
+
+async function runAutoScanLoop() {
+  if (!scanLoopActive || !webcamStream) return;
+
+  const startTs = Date.now();
+  
+  // Capture and scan frame silently
+  const result = await captureAndScanSilent();
+
+  // Handle Defect Flagging and Freezing
+  if (result && result.decision === 'DEFECT') {
+    const video = $('webcam-video');
+    video.pause();
+    
+    const videoWrap = document.querySelector('.video-wrap');
+    if (videoWrap) {
+      videoWrap.classList.add('defect-frozen');
+    }
+    
+    document.querySelector('.scan-status-text').textContent = 'DEFECT FLAGGED';
+    
+    // Temporarily halt scanning loop
+    scanLoopActive = false;
+    
+    setTimeout(() => {
+      // Auto-resume after 1.5 seconds
+      if (webcamStream) {
+        video.play().catch(err => console.warn("Failed to resume video:", err));
+        if (videoWrap) {
+          videoWrap.classList.remove('defect-frozen');
+        }
+        document.querySelector('.scan-status-text').textContent = 'SYSTEM SCANNING';
+        scanLoopActive = true;
+        runAutoScanLoop();
+      }
+    }, 1500);
+    
+    return;
+  }
+
+  // Schedule next scan, maintaining ~800ms interval
+  const elapsed = Date.now() - startTs;
+  const delay = Math.max(0, 800 - elapsed);
+  
+  if (scanLoopActive) {
+    autoScanTimeout = setTimeout(runAutoScanLoop, delay);
+  }
+}
+
+async function captureAndScanSilent() {
+  const video = $('webcam-video');
+  if (!webcamStream || video.paused || video.ended) return null;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  return new Promise((resolve) => {
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        resolve(null);
+        return;
+      }
+      
+      try {
+        const result = await runInference(blob, true);
+        resolve(result);
+      } catch (err) {
+        resolve(null);
+      }
+    }, 'image/jpeg', 0.95);
+  });
+}
+
+// Event Listeners for webcam & toggle UI
+$('toggle-upload').addEventListener('click', () => {
+  $('toggle-upload').classList.add('active');
+  $('toggle-webcam').classList.remove('active');
+  stopWebcam();
+});
+
+$('toggle-webcam').addEventListener('click', () => {
+  $('toggle-webcam').classList.add('active');
+  $('toggle-upload').classList.remove('active');
+  startWebcam();
+});
+$('btn-webcam-stop').addEventListener('click', () => {
+  $('toggle-upload').click();
+});
 
 // ── Refresh log button ────────────────────────────────────────────────────────
 $('btn-refresh-log').addEventListener('click', () => loadLog(logPage));
