@@ -128,6 +128,15 @@ body {
   color: var(--accent);
 }
 
+.badge-engine {
+  background: rgba(168,85,247,0.12);
+  border: 1px solid rgba(168,85,247,0.3);
+  color: #c084fc;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.3px;
+}
+
 .system-status {
   display: flex;
   align-items: center;
@@ -417,6 +426,33 @@ body {
 .model-key { color: var(--text-secondary); font-weight: 500; }
 .model-val { color: var(--text-primary); }
 
+/* ── Analytics Charts (TensorBoard style) ────────────────────────────────── */
+.telemetry-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.timeline-chart-container {
+  height: 220px;
+}
+
+.doughnut-chart-container {
+  height: 240px;
+  display: flex;
+  justify-content: center;
+}
+
 /* ── Upload Card ──────────────────────────────────────────────────────────── */
 .upload-card { grid-column: 1; }
 
@@ -495,6 +531,104 @@ body {
 }
 
 .btn-secondary:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+
+/* ── Inference Cards Gallery ──────────────────────────────────────────────── */
+.gallery-card { grid-column: 1 / -1; }
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.inference-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: transform var(--transition), box-shadow var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.inference-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  border-color: rgba(255,255,255,0.1);
+}
+
+.inference-card.ok-card { border-bottom: 3px solid var(--ok-primary); }
+.inference-card.defect-card { border-bottom: 3px solid var(--defect-primary); }
+
+.card-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #000;
+  position: relative;
+}
+
+.card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+  transition: opacity var(--transition);
+}
+
+.inference-card:hover .card-thumb img { opacity: 1; }
+
+.card-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+.ok-card .card-badge {
+  background: rgba(0,245,160,0.2);
+  color: var(--ok-primary);
+  border: 1px solid rgba(0,245,160,0.4);
+}
+
+.defect-card .card-badge {
+  background: rgba(255,68,68,0.2);
+  color: var(--defect-primary);
+  border: 1px solid rgba(255,68,68,0.4);
+}
+
+.card-details {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-type {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-metrics {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.card-metrics span.mono {
+  color: var(--text-mono);
+}
 
 /* ── Log Card ─────────────────────────────────────────────────────────────── */
 .log-card { grid-column: 1 / -1; }
@@ -590,6 +724,159 @@ body {
   background: rgba(0,245,160,0.12);
   border-color: rgba(0,245,160,0.3);
   color: var(--ok-primary);
+}
+
+/* ── Webcam Mode Styles ─────────────────────────────────────────────────── */
+.mode-toggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  margin-bottom: 20px;
+  gap: 4px;
+}
+
+.toggle-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.toggle-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.toggle-btn.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.video-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #000;
+  aspect-ratio: 4 / 3;
+}
+
+#webcam-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.webcam-overlay-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  border: 2px dashed rgba(0, 245, 160, 0.2);
+  margin: 15%;
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition);
+}
+
+.webcam-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* Live Scan Status Overlay */
+.scan-status-overlay {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(10, 14, 26, 0.85);
+  border: 1px solid var(--ok-primary);
+  border-radius: 20px;
+  padding: 5px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ok-primary);
+  letter-spacing: 0.6px;
+  z-index: 5;
+  box-shadow: 0 0 12px rgba(0, 245, 160, 0.25);
+  transition: all var(--transition);
+  backdrop-filter: blur(4px);
+}
+
+.scan-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok-primary);
+  box-shadow: 0 0 8px var(--ok-primary);
+  animation: pulse-dot 1s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.8); opacity: 0.4; }
+  100% { transform: scale(1.25); opacity: 1; }
+}
+
+/* Defect frozen state styles */
+.video-wrap.defect-frozen {
+  border-color: var(--defect-primary);
+  box-shadow: 0 0 25px rgba(255, 68, 68, 0.4);
+  animation: border-flash 0.5s infinite alternate ease-in-out;
+}
+
+.video-wrap.defect-frozen .webcam-overlay-grid {
+  border-color: var(--defect-primary);
+  box-shadow: inset 0 0 20px rgba(255, 68, 68, 0.2);
+}
+
+.video-wrap.defect-frozen .scan-status-overlay {
+  border-color: var(--defect-primary);
+  color: var(--defect-primary);
+  box-shadow: 0 0 12px rgba(255, 68, 68, 0.25);
+}
+
+.video-wrap.defect-frozen .scan-pulse-dot {
+  background: var(--defect-primary);
+  box-shadow: 0 0 8px var(--defect-primary);
+}
+
+@keyframes border-flash {
+  0% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.2); }
+  100% { box-shadow: 0 0 30px rgba(255, 68, 68, 0.5); }
+}
+
+/* Active scanning pulse animation on overlay grid */
+.scanning-active .webcam-overlay-grid {
+  border-color: rgba(0, 245, 160, 0.7);
+  animation: scan-pulse 1.2s infinite alternate ease-in-out;
+  box-shadow: inset 0 0 15px rgba(0, 245, 160, 0.15);
+}
+
+@keyframes scan-pulse {
+  0% { transform: scale(0.97); opacity: 0.5; }
+  100% { transform: scale(1.03); opacity: 1; }
 }
 
 /* ── Footer ───────────────────────────────────────────────────────────────── */

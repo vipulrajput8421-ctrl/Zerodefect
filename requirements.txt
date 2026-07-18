@@ -25,6 +25,6 @@ tqdm==4.66.4
 matplotlib==3.9.1
 pandas==2.2.2
 
-# ── ONNX Export (for ESP32 Phase 2 conversion) ─────────────────────────────────
+# ── ONNX Export (for AIM Phase 2 conversion) ───────────────────────────────────
 onnx==1.16.1
 onnxruntime==1.18.1

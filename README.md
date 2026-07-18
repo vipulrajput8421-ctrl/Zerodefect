@@ -1,24 +1,34 @@
 # ZeroDefect
 
-> **Few-Shot Anomaly Detection for Automotive Component QC**
+> **YOLOv5n Object Detection for Aircraft Surface Defect Inspection**
 > Tata Technologies InnoVent 2026-27 | Track 3.2.3.4: Intelligent Inspection & Defect Detection
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue)](https://python.org)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.3-orange)](https://pytorch.org)
+[![ONNX](https://img.shields.io/badge/ONNX-Runtime-orange)](https://onnxruntime.ai)
+[![YOLOv5](https://img.shields.io/badge/YOLOv5-Nano-green)](https://github.com/ultralytics/yolov5)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
 
 ## What This Is
 
-ZeroDefect detects manufacturing defects in automotive components (M8 hex bolts) using an **anomaly-first, few-shot** approach:
+ZeroDefect detects surface defects on aircraft skin panels using a **YOLOv5 Nano** object detection model trained on 22k+ images:
 
-1. **Train on good parts only** — the model learns what "normal" looks like
-2. **Flag anything abnormal** — no labeled defect data required at training time
-3. **Fine-tune with 5–20 examples per defect type** — classify crack vs scratch vs dent
-4. **Deploy standalone on ESP32-CAM** — no laptop required at production time
+1. **Pre-trained model** — detects 7 defect types out-of-the-box (no training required)
+2. **Real-time bounding boxes** — localizes defects with class labels and confidence scores
+3. **Edge-deployable** — ONNX (7.2 MB) and RKNN INT8 (2.6 MB) formats included
+4. **Local inference** — no cloud API, no internet required
 
-This is the same architectural approach used by commercial systems (Overview.ai, Averroes.ai) as of 2026.
+### Detected Defect Classes
+| # | Class | Description |
+|---|-------|-------------|
+| 0 | `crack` | Structural cracks, fatigue lines |
+| 1 | `dent` | Impact dents, surface deformations |
+| 2 | `corrosion` | Rust, chemical wear, oxidation |
+| 3 | `scratch` | Superficial scrapes, paint scratches |
+| 4 | `paint-peel` | Flaking paint, coating degradation |
+| 5 | `missing-head` | Missing rivet heads or fasteners |
+| 6 | `defect` | Generic surface anomalies |
 
 ---
 
@@ -40,34 +50,28 @@ source zerodefect_env/bin/activate
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Check your environment
-python src/environment_check.py
+# 4. Download the model (if not already present)
+pip install huggingface_hub
+hf sync hf://buckets/prath0029/Zerodefect-1.0-bucket ./local
+copy local\best.onnx models\best.onnx
+copy local\best.pt models\best.pt
+copy local\best.rknn models\best.rknn
 
-# 5. Collect good-part images (aim for 120)
-python src/capture_good.py --target-count 120
+# 5. Run inference on an image
+python local/infer_onnx.py --model models/best.onnx --image test.jpg --conf 0.25
 
-# 6. Train the anomaly model
-python src/train_model.py
-
-# 7. Validate (put some test images in data/test/ first)
-python src/evaluate_model.py
-
-# 8. Collect defect examples (5–20 each)
-python src/capture_defects.py --defect-type crack
-python src/capture_defects.py --defect-type scratch
-python src/capture_defects.py --defect-type dent
-
-# 9. Fine-tune few-shot classifier
-python src/finetune_fewshot.py
-
-# 10. Run live demo
+# 6. Start the live webcam demo
 python src/live_demo.py
 
-# 11. View audit log
+# 7. Start the web dashboard
+python -m uvicorn dashboard.app:app --host 0.0.0.0 --port 8000 --reload
+# Open: http://localhost:8000
+
+# 8. View audit log
 python src/view_log.py
 
-# 12. Presentation stats
-python data/summary_stats.py
+# 9. Analyze model for edge deployment
+python aim/quantize_model.py
 ```
 
 ---
@@ -76,72 +80,94 @@ python data/summary_stats.py
 
 ```
 ZeroDefect/
-├── data/
-│   ├── good/                    ← 100–150 good-part images (Step 2)
-│   ├── defects/
-│   │   ├── crack/               ← 5–20 crack examples (Step 6)
-│   │   ├── scratch/             ← 5–20 scratch examples (Step 6)
-│   │   └── dent/                ← 5–20 dent examples (Step 6)
-│   ├── test/                    ← Mixed good+bad for evaluation (Step 5)
-│   ├── README.md                ← Dataset spec & photography guide
-│   └── summary_stats.py         ← Print all dataset + model stats
+├── models/
+│   ├── best.onnx                ← YOLOv5n ONNX model (7.2 MB)
+│   ├── best.pt                  ← PyTorch weights (3.8 MB)
+│   ├── best.rknn                ← RKNN INT8 for RV1106 NPU (2.6 MB)
+│   ├── data.yaml                ← Dataset config (7 classes)
+│   └── (legacy: memory_bank.*, classifier.pkl, model_info.json)
 │
 ├── src/
-│   ├── utils.py                 ← Shared backbone + transforms (import from here)
-│   ├── environment_check.py     ← Verify all deps are installed (Step 3)
-│   ├── capture_good.py          ← Webcam: collect good-part images (Step 2)
-│   ├── capture_defects.py       ← Webcam: collect defect examples (Step 6)
-│   ├── train_model.py           ← PatchCore training on good parts (Step 4)
-│   ├── evaluate_model.py        ← Score test images, compute metrics (Step 5)
-│   ├── finetune_fewshot.py      ← KNN classifier on defect embeddings (Step 7)
-│   ├── live_demo.py             ← Live webcam: OK/DEFECT overlay (Step 8+9)
-│   ├── logger.py                ← SQLite + CSV inspection logger (Step 9)
-│   └── view_log.py              ← Print audit log summary (Step 9)
+│   ├── yolo_detector.py         ← YOLOv5n ONNX detector class (NEW)
+│   ├── utils.py                 ← Shared constants + transforms
+│   ├── live_demo.py             ← Live webcam: bounding box detection
+│   ├── logger.py                ← SQLite + CSV inspection logger
+│   ├── view_log.py              ← Print audit log summary
+│   ├── environment_check.py     ← Verify all deps are installed
+│   ├── capture_good.py          ← Webcam: collect good-part images
+│   ├── capture_defects.py       ← Webcam: collect defect examples
+│   ├── train_model.py           ← (Legacy) PatchCore training
+│   ├── evaluate_model.py        ← (Legacy) PatchCore evaluation
+│   ├── finetune_fewshot.py      ← (Legacy) KNN classifier fine-tuning
+│   └── download_aerospace_data.py ← Dataset downloader
 │
-├── models/                      ← Saved model artifacts
-│   ├── memory_bank.npy          ← Coreset patch features (after training)
-│   ├── memory_bank.pkl          ← Fitted NearestNeighbors model
-│   ├── model_info.json          ← Threshold + metadata
-│   └── classifier.pkl           ← Few-shot KNN classifier (after fine-tuning)
+├── dashboard/
+│   ├── app.py                   ← FastAPI server (YOLO + VLM + PatchCore engines)
+│   └── static/
+│       ├── index.html           ← Dashboard UI
+│       ├── app.js               ← Frontend logic (local YOLO inference)
+│       └── style.css            ← Dashboard styling
+│
+├── local/                       ← HF bucket sync target
+│   ├── infer_onnx.py            ← Standalone ONNX inference script
+│   └── README.md                ← Model documentation
 │
 ├── logs/                        ← Audit trail
 │   ├── inspections.csv          ← Every decision logged here
 │   ├── inspections.db           ← SQLite backing store
 │   └── thumbnails/              ← Flagged-frame thumbnails
 │
-├── esp32/                       ← Phase 2: Edge deployment
-│   ├── README.md                ← Hardware guide + wiring diagram
-│   ├── quantize_model.py        ← Export to ONNX / TFLite INT8
+├── aim/                         ← Edge deployment
+│   ├── quantize_model.py        ← Model analysis + export
 │   ├── exported/                ← Quantized model outputs
 │   └── firmware/
-│       └── ZeroDefect_ESP32.ino ← Arduino sketch for ESP32-CAM
-│
-├── web/
-│   └── index.html               ← Self-contained page served by ESP32
+│       └── ZeroDefect_AIM.ino   ← Arduino sketch for AIM
 │
 ├── requirements.txt
 ├── .gitignore
 ├── run_demo.bat                 ← Windows: one-click live demo
 ├── run_capture.bat              ← Windows: one-click capture menu
+├── run_dashboard.bat            ← Windows: one-click dashboard
 ├── demo_day_checklist.md        ← Step-by-step demo day guide
-└── presentation_outline.md     ← Stage 2 slide structure
+└── presentation_outline.md      ← Stage 2 slide structure
 ```
 
 ---
 
-## How It Works (Plain Language)
+## How It Works
 
-**Why no labeled defect data for training?**
+### YOLOv5n Object Detection (Primary — v2.0)
 
-Traditional inspection AI learns "here's a crack, here's a scratch" — which means you need hundreds of labeled defect photos before training can start. That takes weeks and thousands of dollars.
+The model is a **YOLOv5 Nano** trained on 22k+ images from merged aircraft surface defect datasets. It directly detects and localizes defects with bounding boxes — no separate training or anomaly scoring needed.
 
-ZeroDefect does the opposite: we only show it good parts. The model (PatchCore, using a pretrained ResNet18 backbone) learns to represent every patch of every good-part image as a point in a high-dimensional feature space. We save a compact "memory bank" of these points.
+**Inference pipeline:**
+1. Image is letterbox-resized to 640×640
+2. ONNX Runtime runs the YOLOv5n forward pass (~7 MB model)
+3. Non-Maximum Suppression filters overlapping detections
+4. Bounding boxes are rescaled to original image coordinates
+5. Each detection has: class name, confidence score, and bbox coordinates
 
-When a new image arrives, we extract its features and ask: *how far are these features from the nearest point in the memory bank?* Good parts are close to something we've seen before — low distance. Defective parts have patches that look nothing like any good part — high distance.
+**Validation metrics (on merged test set):**
+- Precision: 42.8%
+- Recall: 35.8%
+- mAP@0.5: 31.9%
+- mAP@0.5:0.95: 23.5%
 
-That distance IS the anomaly score. We flag anything above a threshold (learned automatically from the training data distribution).
+### PatchCore Anomaly Detection (Legacy — v1.0)
 
-The few-shot step then adds a lightweight KNN classifier that uses the same feature space to distinguish *which kind* of defect it is — using just 5–20 examples per type.
+The legacy pipeline learns "normal" from good-part images only, then flags anything abnormal using patch-level feature distances. Still available via `engine=patchcore` in the dashboard.
+
+---
+
+## Dashboard Engines
+
+The web dashboard supports three inference engines:
+
+| Engine | Command | Description |
+|--------|---------|-------------|
+| `yolo` (default) | `?engine=yolo` | Local YOLOv5n ONNX — fast, offline, bounding boxes |
+| `vlm` | `?engine=vlm` | Ollama Gemma 3 4B vision model — detailed reasoning |
+| `patchcore` | `?engine=patchcore` | Legacy anomaly detection — requires trained memory bank |
 
 ---
 
@@ -151,17 +177,32 @@ The few-shot step then adds a lightweight KNN classifier that uses the same feat
 |---|---|---|
 | CPU | Intel i5 / AMD Ryzen 5 | Any modern laptop |
 | RAM | 4 GB | 8 GB+ |
-| GPU | None required | CUDA GPU (speeds training) |
+| GPU | None required | CUDA GPU (speeds inference) |
 | Webcam | 720p USB | 1080p or better |
 | Python | 3.10 | 3.11+ |
 
 ---
 
-## Phase 2 — ESP32-CAM Edge Deployment
+## Edge Deployment
 
-See [`esp32/README.md`](esp32/README.md) for the full hardware guide.
+### Luckfox Pico Max (RV1106 NPU)
 
-The trained model is exported to ONNX → TFLite INT8 and flashed to an ESP32-CAM board (~$5). The board runs its own web server — any browser on the same Wi-Fi network sees live inspection results with no laptop.
+The `best.rknn` model is pre-compiled and INT8-quantized for the RV1106 NPU:
+
+```bash
+# Push model to the board
+adb push models/best.rknn /userdata/
+
+# Cross-compile the inference runner
+./build-linux.sh -t rv1106 -a armv7l -d yolov5
+
+# Execute on board
+./rknn_yolov5_demo /userdata/best.rknn test.jpg
+```
+
+### AIM (Aerospace Inspection Module)
+
+See [`aim/README.md`](aim/README.md) for the full hardware guide. Run `python aim/quantize_model.py` for model size analysis.
 
 ---
 
@@ -182,4 +223,4 @@ MIT License. See [LICENSE](LICENSE).
 
 ---
 
-*ZeroDefect v1.0 — InnoVent 2026-27 Submission*
+*ZeroDefect v2.0 — InnoVent 2026-27 Submission*

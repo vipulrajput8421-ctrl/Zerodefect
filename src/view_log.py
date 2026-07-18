@@ -49,29 +49,29 @@ def main():
     stats = logger.get_summary()
     recent = logger.get_recent(args.last)
 
-    print("\n" + "═"*50)
+    print("\n" + "="*50)
     print(" ZERODEFECT INSPECTION LOG SUMMARY")
-    print("═"*50)
+    print("="*50)
     print(f" Total Inspections : {stats['total']}")
     print(f" OK                : {stats['n_ok']} ({stats['pct_ok']:.1f}%)")
     print(f" DEFECT            : {stats['n_defect']} ({stats['pct_defect']:.1f}%)")
-    print("─"*50)
+    print("-"*50)
     print(" By Defect Type:")
     if stats["by_defect_type"]:
         for dt, count in stats["by_defect_type"].items():
             print(f"   - {dt:<13} : {count}")
     else:
         print("   (No defects logged yet)")
-    print("─"*50)
+    print("-"*50)
     print(f" Last Updated      : {stats['last_updated']}")
-    print("═"*50 + "\n")
+    print("="*50 + "\n")
 
     # Table of recent entries
     if recent:
         print(f"Recent Entries (Last {args.last}):")
-        print("─"*75)
+        print("-"*75)
         print(f" {'ID':<5} | {'TIMESTAMP':<22} | {'DECISION':<8} | {'DEFECT TYPE':<12} | {'CONFIDENCE':<10}")
-        print("─"*75)
+        print("-"*75)
         for r in recent:
             # Format time slightly shorter
             ts = r['timestamp'].split(".")[0].replace("T", " ")
@@ -80,7 +80,7 @@ def main():
             
             # Print row
             print(f" {r['id']:<5} | {ts:<22} | {r['decision']:<8} | {def_t:<12} | {conf:<10}")
-        print("─"*75)
+        print("-"*75)
     else:
         print("No recent inspection logs found.")
 

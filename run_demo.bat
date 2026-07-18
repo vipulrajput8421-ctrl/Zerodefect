@@ -7,6 +7,7 @@ echo.
 echo  ██████████████████████████████████████████████
 echo  ██                                          ██
 echo  ██      ZERODEFECT — Live Demo              ██
+echo  ██      YOLOv5n ONNX Detection              ██
 echo  ██      InnoVent 2026-27                    ██
 echo  ██                                          ██
 echo  ██████████████████████████████████████████████
@@ -25,16 +26,18 @@ IF EXIST "zerodefect_env\Scripts\activate.bat" (
     echo.
 )
 
-REM Check if model files exist
-IF NOT EXIST "models\memory_bank.pkl" (
-    echo [ERROR] models\memory_bank.pkl not found!
-    echo         Run training first: python src/train_model.py
+REM Check if YOLO model exists
+IF NOT EXIST "models\best.onnx" (
+    echo [ERROR] models\best.onnx not found!
+    echo         Download: hf sync hf://buckets/prath0029/Zerodefect-1.0-bucket ./local
+    echo         Then:     copy local\best.onnx models\best.onnx
     echo.
     pause
     exit /b 1
 )
 
-echo [INFO] Starting live demo. Press Q in the webcam window to quit.
+echo [INFO] Starting live YOLOv5n detection demo. Press Q in the webcam window to quit.
+echo [INFO] Model: models\best.onnx (7 defect classes)
 echo [INFO] Logs saved to: logs\inspections.csv
 echo.
 

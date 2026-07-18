@@ -68,7 +68,7 @@ def main():
     parser.add_argument("--api-key", type=str, default=os.getenv("ROBOFLOW_API_KEY"),
                         help="Roboflow API Key (falls back to ROBOFLOW_API_KEY env var)")
     parser.add_argument("--dataset", type=str, 
-                        default="dibya-dillip/aircraft-skin-defects-classification-new-dataset/2",
+                        default="prath0029/Zerodefect-1.0-bucket",
                         help="Roboflow dataset identifier: workspace/project/version")
     parser.add_argument("--max-train-good", type=int, default=120,
                         help="Maximum normal/good images to generate for training baseline")
