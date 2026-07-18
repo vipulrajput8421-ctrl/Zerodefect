@@ -128,6 +128,15 @@ body {
   color: var(--accent);
 }
 
+.badge-engine {
+  background: rgba(168,85,247,0.12);
+  border: 1px solid rgba(168,85,247,0.3);
+  color: #c084fc;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.3px;
+}
+
 .system-status {
   display: flex;
   align-items: center;
@@ -417,6 +426,33 @@ body {
 .model-key { color: var(--text-secondary); font-weight: 500; }
 .model-val { color: var(--text-primary); }
 
+/* ── Analytics Charts (TensorBoard style) ────────────────────────────────── */
+.telemetry-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.timeline-chart-container {
+  height: 220px;
+}
+
+.doughnut-chart-container {
+  height: 240px;
+  display: flex;
+  justify-content: center;
+}
+
 /* ── Upload Card ──────────────────────────────────────────────────────────── */
 .upload-card { grid-column: 1; }
 
@@ -495,6 +531,104 @@ body {
 }
 
 .btn-secondary:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+
+/* ── Inference Cards Gallery ──────────────────────────────────────────────── */
+.gallery-card { grid-column: 1 / -1; }
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.inference-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: transform var(--transition), box-shadow var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.inference-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  border-color: rgba(255,255,255,0.1);
+}
+
+.inference-card.ok-card { border-bottom: 3px solid var(--ok-primary); }
+.inference-card.defect-card { border-bottom: 3px solid var(--defect-primary); }
+
+.card-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #000;
+  position: relative;
+}
+
+.card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+  transition: opacity var(--transition);
+}
+
+.inference-card:hover .card-thumb img { opacity: 1; }
+
+.card-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+.ok-card .card-badge {
+  background: rgba(0,245,160,0.2);
+  color: var(--ok-primary);
+  border: 1px solid rgba(0,245,160,0.4);
+}
+
+.defect-card .card-badge {
+  background: rgba(255,68,68,0.2);
+  color: var(--defect-primary);
+  border: 1px solid rgba(255,68,68,0.4);
+}
+
+.card-details {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-type {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-metrics {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.card-metrics span.mono {
+  color: var(--text-mono);
+}
 
 /* ── Log Card ─────────────────────────────────────────────────────────────── */
 .log-card { grid-column: 1 / -1; }

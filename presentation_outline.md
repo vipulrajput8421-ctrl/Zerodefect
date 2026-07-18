@@ -32,8 +32,8 @@ _Drop in:_ Screenshot of `python src/view_log.py` output.
 → Note: this is a design feature, not a certification claim.
 
 ### Slide 6: Roadmap — Edge Deployment
-_Drop in:_ Photo of ESP32-CAM board (or the diagram from esp32/README.md).
-→ Describe Phase 2: model quantized to INT8, runs on ESP32-CAM standalone, serves live results over Wi-Fi to any browser.
+_Drop in:_ Photo of AIM board (or the diagram from aim/README.md).
+→ Describe Phase 2: model quantized to INT8, runs on AIM standalone, serves live results over Wi-Fi to any browser.
 → Timeline: Weeks 7–8 of build plan.
 
 ### Slide 7: Q&A Prep — Pre-Written Answers

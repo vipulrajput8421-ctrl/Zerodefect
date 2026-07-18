@@ -41,7 +41,7 @@ def main():
         ("tqdm", "tqdm", False),
         ("pandas", "pandas", False),
         ("onnx", "onnx", False),
-        ("onnxruntime", "onnxruntime", False),
+        ("onnxruntime", "onnxruntime", True),
     ]
 
     print("\nPackage dependencies:")
@@ -141,7 +141,7 @@ def main():
         sys.exit(0)
     else:
         print(f"[STATUS] SUCCESS! Everything is correctly configured on device '{device_rec}'.")
-        print("You are ready to run: python src/capture_good.py")
+        print("You are ready to run: run_dashboard.bat or run_demo.bat")
         sys.exit(0)
 
 

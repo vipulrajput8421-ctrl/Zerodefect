@@ -7,7 +7,9 @@
   <meta name="description" content="Real-time aerospace aircraft skin anomaly detection dashboard. Few-shot defect detection for InnoVent 2026." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=1.4" />
+  <link rel="stylesheet" href="style.css?v=1.7" />
+  <!-- Chart.js for real-time analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -36,6 +38,7 @@
       <div class="header-meta">
         <div class="badge badge-track">Track 3.2.3.4</div>
         <div class="badge badge-innov">InnoVent 2026</div>
+        <div class="badge badge-engine" id="engine-badge" title="AI Inference Engine">🎯 YOLOv5n · ONNX</div>
         <div class="system-status" id="system-status">
           <span class="status-dot" id="status-dot"></span>
           <span id="status-text">Connecting…</span>
@@ -111,23 +114,34 @@
         </div>
       </div>
 
+      <!-- Real-time Telemetry (Timeline) -->
+      <div class="telemetry-section">
+        <h3 class="breakdown-title">Real-time Confidence Timeline</h3>
+        <div class="chart-container timeline-chart-container">
+          <canvas id="timeline-chart"></canvas>
+        </div>
+      </div>
+
       <!-- Defect breakdown -->
       <div class="breakdown-section">
-        <h3 class="breakdown-title">Defect Breakdown</h3>
-        <div id="breakdown-list" class="breakdown-list">
-          <div class="breakdown-empty">No defects logged yet.</div>
+        <h3 class="breakdown-title">Defect Breakdown Distribution</h3>
+        <div class="chart-container doughnut-chart-container">
+          <canvas id="breakdown-chart"></canvas>
         </div>
+        <div id="breakdown-list" class="breakdown-list" style="display:none;"></div>
       </div>
 
       <!-- Model info -->
       <div class="model-info-section" id="model-info-section">
         <h3 class="breakdown-title">Model Status</h3>
         <div class="model-info-grid" id="model-info-grid">
-          <span class="model-key">Status</span>
+          <span class="model-key">Engine</span>
           <span class="model-val" id="mi-status">Loading…</span>
-          <span class="model-key">Classifier</span>
-          <span class="model-val" id="mi-classifier">—</span>
-          <span class="model-key">Threshold</span>
+          <span class="model-key">Model</span>
+          <span class="model-val" id="mi-model">—</span>
+          <span class="model-key">Classes</span>
+          <span class="model-val" id="mi-classes">—</span>
+          <span class="model-key">mAP@0.5</span>
           <span class="model-val mono" id="mi-threshold">—</span>
         </div>
       </div>
@@ -142,6 +156,13 @@
       <div class="mode-toggle">
         <button class="toggle-btn active" id="toggle-upload">📂 File Upload</button>
         <button class="toggle-btn" id="toggle-webcam">📷 Live Scan</button>
+      </div>
+
+      <!-- Engine toggle -->
+      <div class="engine-toggle" style="display: flex; gap: 8px; margin-top: 16px; margin-bottom: 16px;">
+        <button class="toggle-btn active" id="engine-hybrid" onclick="setEngine('hybrid')">🔄 Hybrid</button>
+        <button class="toggle-btn" id="engine-yolo" onclick="setEngine('yolo')">⚡ YOLOv5</button>
+        <button class="toggle-btn" id="engine-moondream" onclick="setEngine('moondream')">🧠 Moondream</button>
       </div>
 
       <!-- File upload container -->
@@ -175,18 +196,34 @@
           <!-- Live Scan Status Overlay -->
           <div class="scan-status-overlay">
             <span class="scan-pulse-dot"></span>
-            <span class="scan-status-text">SYSTEM SCANNING</span>
+            <span class="scan-status-text">CAMERA READY</span>
           </div>
         </div>
         <div class="webcam-controls">
-          <button class="btn-upload" id="btn-webcam-stop" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text-secondary); width: 100%; margin-top: 16px;">
-            🛑 Stop Scanning &amp; Close Camera
+          <button class="btn-upload" id="btn-scan-frame" style="width:100%; margin-top:16px; background: linear-gradient(135deg,rgba(0,245,160,0.15),rgba(0,217,245,0.15)); border:1px solid rgba(0,245,160,0.4); color:#00f5a0; font-weight:700; font-size:0.95rem;">
+            📸 Scan Frame
+          </button>
+          <button class="btn-upload" id="btn-webcam-stop" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text-secondary); width: 100%; margin-top: 10px;">
+            🛑 Stop &amp; Close Camera
           </button>
         </div>
       </div>
 
       <!-- Result section (shared by both) -->
       <div id="upload-result" class="upload-result" style="display:none"></div>
+    </section>
+
+    <!-- ── Inference Cards Gallery ── -->
+    <section class="card gallery-card">
+      <div class="log-header" style="margin-bottom: 16px;">
+        <h2 class="card-title" style="margin-bottom: 0;">Recent Inferences Gallery</h2>
+        <div class="log-actions">
+          <button class="btn-secondary" id="btn-clear-history" style="background: rgba(255, 60, 60, 0.08); border-color: rgba(255, 60, 60, 0.3); color: #ff6b6b;" onclick="clearHistory()">🗑 Clear History</button>
+        </div>
+      </div>
+      <div id="cards-grid" class="cards-grid">
+        <div class="empty-row" style="grid-column: 1 / -1;">Waiting for inferences...</div>
+      </div>
     </section>
 
     <!-- ── Audit Log ── -->
@@ -207,6 +244,7 @@
               <th>Timestamp</th>
               <th>Decision</th>
               <th>Defect Type</th>
+              <th>Engine</th>
               <th>Confidence</th>
               <th>Score</th>
             </tr>
@@ -223,14 +261,14 @@
   </main>
 
   <footer class="site-footer">
-    <p>ZeroDefect v1.0 &nbsp;|&nbsp; InnoVent 2026-27 &nbsp;|&nbsp;
+    <p>ZeroDefect v2.0 &nbsp;|&nbsp; InnoVent 2026-27 &nbsp;|&nbsp;
        <span class="mono" id="footer-refresh">Auto-refreshing every 3s</span>
     </p>
     <p class="footer-note">
-      Anomaly-first + few-shot detection. EU AI Act traceability compliant design.
+      YOLOv5n object detection · 7 defect classes · ONNX edge-ready · EU AI Act traceability compliant.
     </p>
   </footer>
 
-  <script src="app.js?v=1.4"></script>
+  <script src="app.js?v=2.0"></script>
 </body>
 </html>

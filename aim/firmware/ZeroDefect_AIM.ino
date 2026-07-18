@@ -1,15 +1,15 @@
 /*
- * ZeroDefect — ESP32-CAM Inference + Web Server
+ * ZeroDefect — AIM (Aerospace Inspection Module) Inference + Web Server
  * 
  * HARDWARE REQUIRED:
- * - AI-Thinker ESP32-CAM board
+ * - ZeroDefect AIM (Aerospace Inspection Module) board
  * - OV2640 camera module (included)
  * - 5V/2A power supply
  * 
  * SETUP:
- * - Flash using Arduino IDE with ESP32 board support
+ * - Flash using Arduino IDE with ESP32 board support (AIM is ESP32-CAM compatible)
  * - Set Wi-Fi credentials below
- * - See esp32/README.md for full setup instructions
+ * - See aim/README.md for full setup instructions
  * 
  * HARDWARE_VALIDATION_REQUIRED:
  * All sections marked with this comment need physical board testing.
@@ -20,7 +20,7 @@
 #include "esp_http_server.h"
 
 // Wi-Fi Config - HARDWARE_VALIDATION_REQUIRED: Edit to match local network
-const char* ssid = "ZeroDefect_AP";
+const char* ssid = "ZeroDefect_AIM_AP";
 const char* password = "password123";
 
 // AI-Thinker Camera Pins Config
@@ -95,7 +95,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <html>
 <head>
   <meta charset="utf-8">
-  <title>ZeroDefect — ESP32 Live QC Node</title>
+  <title>ZeroDefect — AIM Live QC Node</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: -apple-system, sans-serif; background: #0c101f; color: #e2e8f0; margin: 0; padding: 20px; text-align: center; }
@@ -112,7 +112,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <body>
   <div class="card">
     <h1>ZeroDefect</h1>
-    <div style="font-size:12px; color:#64748b;">ESP32 Edge Inspection Node</div>
+    <div style="font-size:12px; color:#64748b;">AIM Edge Inspection Node</div>
     <hr style="border:0; border-top: 1px solid rgba(255,255,255,0.08); margin: 15px 0;">
     
     <div id="decision-box">
@@ -246,7 +246,7 @@ void startCameraServer() {
 // ── Initialization Setup ────────────────────────────────────────────────────
 void setup() {
     Serial.begin(115200);
-    Serial.println("\n[*] Initializing ZeroDefect ESP32-CAM Node...");
+    Serial.println("\n[*] Initializing ZeroDefect AIM Node...");
 
     start_time_ms = millis();
     pinMode(FLASH_LED_GPIO, OUTPUT);

@@ -11,8 +11,8 @@
 - [ ] Clear old logs if desired: `python src/view_log.py --clear`
 - [ ] Have 3 good bolts and 3 defective bolts physically labelled and within reach
 
-### T-30 Minutes: Hardware Check (ESP32)
-- [ ] ESP32-CAM powered on
+### T-30 Minutes: Hardware Check (AIM)
+- [ ] AIM Board powered on
 - [ ] IP address visible in Serial Monitor (or noted from last session)
 - [ ] Browser on judge's phone opened to http://[IP_ADDRESS]/ — page loads
 - [ ] Camera feed responding (page auto-refreshes every 2s)
@@ -30,10 +30,10 @@
 2. Hold GOOD bolt → "OK" in green ✓
 3. Hold DEFECTIVE bolt → "DEFECT: crack" in red ✓
 4. Run `python src/view_log.py` → show audit trail
-5. Switch to ESP32 browser demo on judge's phone (secondary)
+5. Switch to AIM browser demo on judge's phone (secondary)
 
 ### Hardware Failure — Webcam Fallback
-If ESP32 hardware fails:
+If AIM hardware fails:
 ```bash
 # Switch entirely to laptop webcam demo:
 python src/live_demo.py --camera-id 0
@@ -59,7 +59,7 @@ _"We used [X total defect images] across [N] defect types — averaging [Y] per 
 → _"On our held-out test set: [paste accuracy from evaluate_model.py output]. More importantly, recall — catching actual defects — is our priority metric."_
 
 **"Is this real-time?"**
-→ _"The laptop runs at ~3 FPS by design to stay light. The ESP32-CAM checks every 2 seconds, which is appropriate for a station-based inspection setup rather than a conveyor belt."_
+→ _"The laptop runs at ~3 FPS by design to stay light. The AIM checks every 2 seconds, which is appropriate for a station-based inspection setup rather than a conveyor belt."_
 
 ### Backup Materials
 - [ ] USB drive with: models/, src/, presentation slides, demo video recording of live_demo.py

@@ -33,6 +33,20 @@ DEFAULT_IMAGE_SIZE = 256   # Resize all images to this before feature extraction
 FEATURE_DIM = 384          # 128 (layer2) + 256 (layer3) after upsampling
 
 # ─────────────────────────────────────────────
+# YOLOv5n Model Constants (Zerodefect-1.0)
+# ─────────────────────────────────────────────
+YOLO_MODEL_PATH = MODELS_DIR / "best_balanced.onnx"
+YOLO_PT_PATH = MODELS_DIR / "best.pt"
+YOLO_RKNN_PATH = MODELS_DIR / "best.rknn"
+YOLO_IMAGE_SIZE = 640
+YOLO_CONF_THRESHOLD = 0.25
+YOLO_IOU_THRESHOLD = 0.45
+YOLO_CLASSES = [
+    "crack", "dent", "corrosion", "scratch",
+    "paint-peel", "missing-head", "defect"
+]
+
+# ─────────────────────────────────────────────
 # Image transform (must be same at train + inference)
 # ─────────────────────────────────────────────
 

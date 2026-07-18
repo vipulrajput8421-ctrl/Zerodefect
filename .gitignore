@@ -36,6 +36,10 @@ models/*.pth
 models/*.onnx
 models/*.tflite
 models/*.bin
+models/*.pt
+models/*.rknn
+models/*.yaml
+local/
 # Keep .gitkeep files so folders are tracked
 !models/.gitkeep
 
@@ -52,11 +56,18 @@ logs/*.db
 Thumbs.db
 desktop.ini
 
-# ── ESP32 build artifacts ──────────────────────────────────────────────────────
-esp32/build/
-esp32/.pio/
+# ── AIM build artifacts ────────────────────────────────────────────────────────
+aim/build/
+aim/.pio/
 
 # ── Roboflow/Dataset Folders ───────────────────────────────────────────────────
 Aircraft-AI-Dataset-4/
 Aircraft-Defect-Detection-3/
 aircraft-skin-defects-classification-new-dataset-2/
+
+# ── Playwright / Temporary files ────────────────────────────────────────────────
+.playwright-mcp/
+models/*.mf
+output.jpg
+scratch/
+models/evaluation/
